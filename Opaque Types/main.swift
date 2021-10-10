@@ -158,3 +158,61 @@ func `repeat`<T: Shape>(shape: T, count: Int) -> some Collection {
 }
 
 print(`repeat`(shape: someSquare, count: 3))
+
+
+//MARK: Различия между типом протокола и непрозрачным типом
+print("\n//Различия между типом протокола и непрозрачным типом")
+
+func protoFlip1<T: Shape>(_ shape: T) -> Shape {
+    if shape is Square {
+        return shape
+    }
+    return FlippedShape(shape: shape)
+}
+
+let protoFlippedTriangle1 = protoFlip1(smallTriangle)
+let sameThing1 = protoFlip1(smallTriangle)
+//print(protoFlippedTriangle1 == sameThing1)  // Error
+
+//protoFlip1(protoFlip1(smallTriangle)) // Error
+
+func protoFlip2<T: Shape>(_ shape: T) -> some Shape {
+    print("Done")
+    return FlippedShape(shape: shape)
+}
+
+//let protoFlippedTriangle2 = protoFlip2(smallTriangle)
+//let sameThing2 = protoFlip2(smallTriangle)
+//print(protoFlippedTriangle2 == sameThing2)  // Error
+
+print(protoFlip2(protoFlip2(smallTriangle)))
+
+//---
+
+protocol Container {
+    associatedtype Item
+    var count: Int { get }
+    subscript(i: Int) -> Item { get }
+}
+extension Array: Container { }
+
+// Error: Протоколы со связанными типами не могут быть использованы в качестве возвращаемого типа.
+//func makeProtocolContainer<T>(item: T) -> Container {
+//    return [item]
+//}
+
+// Error: Не достаточно информации для определения типа C.
+//func makeProtocolContainer<T, C: Container>(item: T) -> C {
+//    return [item]
+//}
+
+func makeOpaqueContainer<T>(item: T) -> some Container {
+    return [item]
+}
+
+let opaqueContainer = makeOpaqueContainer(item: 12)
+print(opaqueContainer)
+let twelve = opaqueContainer[0]
+print(twelve)
+print(type(of: twelve))
+// Prints "Int"
